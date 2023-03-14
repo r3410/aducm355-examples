@@ -1,4 +1,12 @@
-/******************************************************************************
+/*!
+ *****************************************************************************
+ @file:    RampTest.H
+ @author:  $Author: nxu2 $
+ @brief:   Ramp Test header file.
+ @version: $Revision: 766 $
+ @date:    $Date: 2017-08-21 14:09:35 +0100 (Mon, 21 Aug 2017) $
+ -----------------------------------------------------------------------------
+
 Copyright (c) 2017-2019 Analog Devices, Inc. All Rights Reserved.
 
 This software is proprietary to Analog Devices, Inc. and its licensors.
@@ -6,7 +14,6 @@ By using this software you agree to the terms of the associated
 Analog Devices Software License Agreement.
 
 *****************************************************************************/
-
 #ifndef _SWVTEST_H_
 #define _SWVTEST_H_
 #include "ad5940.h"
@@ -67,9 +74,9 @@ typedef struct
   uint32_t  CurrVzeroCode;        
   BoolFlag  bDACCodeInc;          /**< Increase DAC code.  */
   BoolFlag  bSqrWaveHiLevel;			/**< Flag to indicate square wave high level */
-  float     floor;
-  BoolFlag  StopRequired;         /**< After FIFO is ready, stop the measurment sequence */
-  enum _RampState{SWV_STATE0 = 0, SWV_STATE1, SWV_STATE2, SWV_STOP} RampState;
+	BoolFlag bRampOneDir;						/**< Ramp in one direction only */
+  BoolFlag  StopRequired;         /**< After FIFO is ready, stop the measurement sequence */
+  enum _RampState{SWV_STATE0 = 0, SWV_STATE1, SWV_STATE2, SWV_STATE3, SWV_STATE4, SWV_STOP} RampState;
 }AppSWVCfg_Type;
 
 #define APPCTRL_START          0
@@ -81,5 +88,9 @@ AD5940Err AppSWVInit(uint32_t *pBuffer, uint32_t BufferSize);
 AD5940Err AppSWVGetCfg(void *pCfg);
 AD5940Err AppSWVISR(void *pBuff, uint32_t *pCount);
 AD5940Err AppSWVCtrl(uint32_t Command, void *pPara);
+void AD5940_McuSetLow(void);
+void AD5940_McuSetHigh(void);
+
+extern uint8_t totalDataReceivedSQW1;
 
 #endif

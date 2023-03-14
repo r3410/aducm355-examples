@@ -1,4 +1,12 @@
-/******************************************************************************
+/*!
+ *****************************************************************************
+ @file:    AD5940Main.c
+ @author:  $Author: nxu2 $
+ @brief:   Used to control specific application and process data.
+ @version: $Revision: 766 $
+ @date:    $Date: 2017-08-21 14:09:35 +0100 (Mon, 21 Aug 2017) $
+ -----------------------------------------------------------------------------
+
 Copyright (c) 2017-2019 Analog Devices, Inc. All Rights Reserved.
 
 This software is proprietary to Analog Devices, Inc. and its licensors.
@@ -6,7 +14,6 @@ By using this software you agree to the terms of the associated
 Analog Devices Software License Agreement.
 
 *****************************************************************************/
-
 #include "SqrWaveVoltammetry.h"
 
 /**
@@ -24,16 +31,44 @@ float LFOSCFreq;    /* Measured LFOSC frequency */
  * @param DataCount: The available data count in buffer pData.
  * @return return 0.
 */
+uint32_t index1=0,general_index,j=0;;
+float SQW_DataToPrint[2500],SQW_DataToPrint_filt[2500];
 static int32_t RampShowResult(float *pData, uint32_t DataCount)
 {
-  static uint32_t index;
-  /* Print data*/
+ /* Print data*/
   for(int i=0;i<DataCount;i++)
   {
-    printf("index:%ld, %.3f \n", index++, pData[i]);
+				index1++;
+
+    printf("index:%d, %.3f \n",index1 , pData[i]);
+		SQW_DataToPrint[index1]=pData[i];
+		
     //i += 10;  /* Print though UART consumes too much time. */
   }
+	general_index=index1;
+	
   return 0;
+}
+
+void PrintData(void)
+{
+	index1=0;
+	j=0;
+	for(int i=0;i<general_index;i++)
+  {
+//		printf("Data:%ld, %.3f \n", i, SQW_DataToPrint[i]);
+//		printf("R:%f\n", SQW_DataToPrint[i]/SQW_DataToPrint[i+1]);
+		SQW_DataToPrint_filt[j]=SQW_DataToPrint[i+2]-SQW_DataToPrint[i];
+		SQW_DataToPrint_filt[j+1]=SQW_DataToPrint[i+3];
+		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j]);
+		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j+1]);
+		printf("SQW,%.3f,%.3f\n", SQW_DataToPrint_filt[j+1]*-1, SQW_DataToPrint_filt[j]);
+		AD5940_Delay10us(3000);
+		j=j+2;
+		i=i+3;
+		  
+  }
+	general_index=0;
 }
 
 /**
@@ -46,8 +81,11 @@ static int32_t AD5940PlatformCfg(void)
   CLKCfg_Type clk_cfg;
   SEQCfg_Type seq_cfg;  
   FIFOCfg_Type fifo_cfg;
+  AGPIOCfg_Type gpio_cfg;
   LFOSCMeasure_Type LfoscMeasure;
 
+  /* Use hardware reset */
+  AD5940_HWReset();
   AD5940_Initialize();    /* Call this right after AFE reset */
 	
   /* Platform configuration */
@@ -64,11 +102,11 @@ static int32_t AD5940PlatformCfg(void)
   /* Step2. Configure FIFO and Sequencer*/
   fifo_cfg.FIFOEn = bTRUE;           /* We will enable FIFO after all parameters configured */
   fifo_cfg.FIFOMode = FIFOMODE_FIFO;
-  fifo_cfg.FIFOSize = FIFOSIZE_2KB;   /* 2kB for FIFO, The reset 4kB for sequencer */
+  fifo_cfg.FIFOSize = FIFOSIZE_4KB;   /* 2kB for FIFO, The reset 4kB for sequencer */
   fifo_cfg.FIFOSrc = FIFOSRC_SINC3;   /* */
   fifo_cfg.FIFOThresh = 4;            /*  Don't care, set it by application paramter */
   AD5940_FIFOCfg(&fifo_cfg);
-  seq_cfg.SeqMemSize = SEQMEMSIZE_4KB;  /* 4kB SRAM is used for sequencer, others for data FIFO */
+  seq_cfg.SeqMemSize = SEQMEMSIZE_2KB;  /* 4kB SRAM is used for sequencer, others for data FIFO */
   seq_cfg.SeqBreakEn = bFALSE;
   seq_cfg.SeqIgnoreEn = bTRUE;
   seq_cfg.SeqCntCRCClr = bTRUE;
@@ -80,15 +118,21 @@ static int32_t AD5940PlatformCfg(void)
   AD5940_INTCClrFlag(AFEINTSRC_ALLINT);
   AD5940_INTCCfg(AFEINTC_0, AFEINTSRC_DATAFIFOTHRESH|AFEINTSRC_ENDSEQ|AFEINTSRC_CUSTOMINT0, bTRUE); 
   AD5940_INTCClrFlag(AFEINTSRC_ALLINT);
-
+  /* Step4: Configure GPIOs */
+  gpio_cfg.FuncSet = GP0_INT|GP1_SLEEP|GP2_SYNC;  /* GPIO1 indicates AFE is in sleep state. GPIO2 indicates ADC is sampling. */
+  gpio_cfg.InputEnSet = 0;
+  gpio_cfg.OutputEnSet = AGPIO_Pin0|AGPIO_Pin1|AGPIO_Pin2;
+  gpio_cfg.OutVal = 0;
+  gpio_cfg.PullEnSet = 0;
+  AD5940_AGPIOCfg(&gpio_cfg);
   /* Measure LFOSC frequency */
-  /**@note Calibrate LFOSC using system clock. The system clock accuracy decides measurment accuracy. Use XTAL to get better result. */
+  /**@note Calibrate LFOSC using system clock. The system clock accuracy decides measurement accuracy. Use XTAL to get better result. */
   LfoscMeasure.CalDuration = 1000.0;  /* 1000ms used for calibration. */
   LfoscMeasure.CalSeqAddr = 0;        /* Put sequence commands from start address of SRAM */
   LfoscMeasure.SystemClkFreq = 16000000.0f; /* 16MHz in this firmware. */
   AD5940_LFOSCMeasure(&LfoscMeasure, &LFOSCFreq);
   printf("LFOSC Freq:%f\n", LFOSCFreq);
-  AD5940_SleepKeyCtrlS(SLPKEY_UNLOCK);         /*  */
+ // AD5940_SleepKeyCtrlS(SLPKEY_UNLOCK);         /*  */
   return 0;
 }
 
@@ -103,23 +147,26 @@ void AD5940RampStructInit(void)
   AppSWVGetCfg(&pRampCfg);
   /* Step1: configure general parmaters */
   pRampCfg->SeqStartAddr = 0x10;                /* leave 16 commands for LFOSC calibration.  */
-  pRampCfg->MaxSeqLen = 1024-0x10;              /* 4kB/4 = 1024  */
+  pRampCfg->MaxSeqLen = 512-0x10;              /* 4kB/4 = 1024  */
   pRampCfg->RcalVal = 200.0;                  /* 200 Ohm RCAL on EVAL-ADuCM355QSPZ */
-  pRampCfg->ADCRefVolt = 1820.0f;               /* The real ADC reference voltage. Measure it from capacitor C12 with DMM. */
-  pRampCfg->FifoThresh = 480;                   /* Maximum value is 2kB/4-1 = 512-1. Set it to higher value to save power. */
+  pRampCfg->ADCRefVolt = 1820.0f;  
+  pRampCfg->FifoThresh = 1023;                   /* Maximum value is 2kB/4-1 = 512-1. Set it to higher value to save power. */
   pRampCfg->SysClkFreq = 16000000.0f;           /* System clock is 16MHz by default */
   pRampCfg->LFOSCClkFreq = LFOSCFreq;           /* LFOSC frequency */
+	pRampCfg->AdcPgaGain = ADCPGA_1P5;
+	pRampCfg->ADCSinc3Osr = ADCSINC3OSR_4;
   
 	/* Step 2:Configure square wave signal parameters */
-  pRampCfg->RampStartVolt = -500.0f;           /* -0.5V */
-  pRampCfg->RampPeakVolt = +500.0f;            /* +0.5V */
-  pRampCfg->VzeroStart = 1300.0f;               /* 1.3V */
-  pRampCfg->VzeroPeak = 1300.0f;                /* 1.3V */
-  pRampCfg->Frequency = 25;                     /* Frequency of square wave in Hz */
-  pRampCfg->SqrWvAmplitude = 50;                /* Amplitude of square wave in mV */
-  pRampCfg->SqrWvRampIncrement = 5;             /* Increment in mV*/
-  pRampCfg->SampleDelay = 10.0f;                /* 10ms. Time delay between DAC update and ADC sample. Unit is ms. */
-  pRampCfg->LPTIARtiaSel = LPTIARTIA_8K;      /* Maximum current decides RTIA value */
+  pRampCfg->RampStartVolt = -1200.0f;     /* Measurement starts at 0V*/
+  pRampCfg->RampPeakVolt = 0.0f;     		 /* Measurement finishes at -0.4V */
+  pRampCfg->VzeroStart = 2100.0f;           /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->VzeroPeak = 2100.0f;          /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->Frequency = 100;                 /* Frequency of square wave in Hz */
+  pRampCfg->SqrWvAmplitude = 60;       /* Amplitude of square wave in mV */
+  pRampCfg->SqrWvRampIncrement = 5; /* Increment in mV*/
+  pRampCfg->SampleDelay = 2.0f;             /* Time between update DAC and ADC sample. Unit is ms and must be < (1/Frequency)/2 - 0.2*/
+  pRampCfg->LPTIARtiaSel = LPTIARTIA_1K;      /* Maximum current decides RTIA value */
+	pRampCfg->bRampOneDir = bTRUE;//bTRUE;			/* Only measure ramp in one direction */
 }
 
 void AD5940_Main(void)
@@ -127,9 +174,13 @@ void AD5940_Main(void)
   uint32_t temp;  
   AD5940PlatformCfg();
   AD5940RampStructInit();
-
+	
+	//AD5940_McuSetLow();
   AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */
-  AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurment to start. Second parameter has no meaning with this command. */
+	
+	
+	AD5940_Delay10us(100000);		/* Add a delay to allow sensor reach equilibrium befor starting the measurement */
+  AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurement to start. Second parameter has no meaning with this command. */
 
   while(1)
   {
@@ -139,8 +190,15 @@ void AD5940_Main(void)
       temp = APPBUFF_SIZE;
       AppSWVISR(AppBuff, &temp);
       RampShowResult((float*)AppBuff, temp);
-    }
+    
+				if(totalDataReceivedSQW1==1)
+				{
+					PrintData();
+					totalDataReceivedSQW1=0;
 
-  }
+				}
+
+		}
+	}
+
 }
-
