@@ -400,6 +400,11 @@
               <FileType>1</FileType>
               <FilePath>..\SqrWaveVoltammetry.c</FilePath>
             </File>
+            <File>
+              <FileName>UARTCmd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UARTCmd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

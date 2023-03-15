@@ -40,7 +40,7 @@ static int32_t RampShowResult(float *pData, uint32_t DataCount)
   {
 				index1++;
 
-    printf("index:%d, %.3f \n",index1 , pData[i]);
+    //printf("index:%d, %.3f \n",index1 , pData[i]);
 		SQW_DataToPrint[index1]=pData[i];
 		
     //i += 10;  /* Print though UART consumes too much time. */
@@ -58,11 +58,11 @@ void PrintData(void)
   {
 //		printf("Data:%ld, %.3f \n", i, SQW_DataToPrint[i]);
 //		printf("R:%f\n", SQW_DataToPrint[i]/SQW_DataToPrint[i+1]);
-		SQW_DataToPrint_filt[j]=SQW_DataToPrint[i+2]-SQW_DataToPrint[i];
+		SQW_DataToPrint_filt[j]=SQW_DataToPrint[i]-SQW_DataToPrint[i+2];
 		SQW_DataToPrint_filt[j+1]=SQW_DataToPrint[i+3];
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j]);
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j+1]);
-		printf("SQW,%.3f,%.3f\n", SQW_DataToPrint_filt[j+1]*-1, SQW_DataToPrint_filt[j]);
+		printf("%.3f,%.3f\n", SQW_DataToPrint_filt[j+1], SQW_DataToPrint_filt[j]*-1);
 		AD5940_Delay10us(3000);
 		j=j+2;
 		i=i+3;
@@ -159,46 +159,54 @@ void AD5940RampStructInit(void)
 	/* Step 2:Configure square wave signal parameters */
   pRampCfg->RampStartVolt = -1200.0f;     /* Measurement starts at 0V*/
   pRampCfg->RampPeakVolt = 0.0f;     		 /* Measurement finishes at -0.4V */
-  pRampCfg->VzeroStart = 2100.0f;           /* Vzero is voltage on SE0 pin: 1.3V */
-  pRampCfg->VzeroPeak = 2100.0f;          /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->VzeroStart = 2200.0f;           /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->VzeroPeak = 2200.0f;          /* Vzero is voltage on SE0 pin: 1.3V */
   pRampCfg->Frequency = 100;                 /* Frequency of square wave in Hz */
   pRampCfg->SqrWvAmplitude = 60;       /* Amplitude of square wave in mV */
   pRampCfg->SqrWvRampIncrement = 5; /* Increment in mV*/
   pRampCfg->SampleDelay = 2.0f;             /* Time between update DAC and ADC sample. Unit is ms and must be < (1/Frequency)/2 - 0.2*/
-  pRampCfg->LPTIARtiaSel = LPTIARTIA_1K;      /* Maximum current decides RTIA value */
+  pRampCfg->LPTIARtiaSel = LPTIARTIA_4K;      /* Maximum current decides RTIA value */
 	pRampCfg->bRampOneDir = bTRUE;//bTRUE;			/* Only measure ramp in one direction */
 }
 
 void AD5940_Main(void)
 {
-  uint32_t temp;  
-  AD5940PlatformCfg();
-  AD5940RampStructInit();
-	
-	//AD5940_McuSetLow();
-  AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */
-	
-	
-	AD5940_Delay10us(100000);		/* Add a delay to allow sensor reach equilibrium befor starting the measurement */
-  AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurement to start. Second parameter has no meaning with this command. */
+			  uint32_t temp;  
 
   while(1)
   {
-    if(AD5940_GetMCUIntFlag())
-    {
-      AD5940_ClrMCUIntFlag();
-      temp = APPBUFF_SIZE;
-      AppSWVISR(AppBuff, &temp);
-      RampShowResult((float*)AppBuff, temp);
-    
-				if(totalDataReceivedSQW1==1)
-				{
-					PrintData();
-					totalDataReceivedSQW1=0;
+		
+		if(start_measurment==1)
+		{		
 
-				}
-
+				AD5940PlatformCfg();
+				AD5940RampStructInit();
+				
+				//AD5940_McuSetLow();
+				AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */
+				
+				
+				AD5940_Delay10us(100000);		/* Add a delay to allow sensor reach equilibrium befor starting the measurement */
+				AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurement to start. Second parameter has no meaning with this command. */
+			start_measurment=2;
 		}
-	}
+		if(start_measurment==2)
+		{
+			if(AD5940_GetMCUIntFlag())
+			{
+				AD5940_ClrMCUIntFlag();
+				temp = APPBUFF_SIZE;
+				AppSWVISR(AppBuff, &temp);
+				RampShowResult((float*)AppBuff, temp);
+			
+					if(totalDataReceivedSQW1==1)
+					{
+						PrintData();
+						totalDataReceivedSQW1=0;
+						start_measurment=0;
+					}
+				}
+			}
+		}
 
 }

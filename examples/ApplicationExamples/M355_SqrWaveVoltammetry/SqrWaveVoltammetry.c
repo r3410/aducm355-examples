@@ -967,7 +967,6 @@ AD5940Err AppSWVISR(void *pBuff, uint32_t *pCount)
   if(IntFlag&AFEINTSRC_DATAFIFOTHRESH)
   {
     FifoCnt = AD5940_FIFOGetCnt();
-    
     if(FifoCnt > BuffCount)
     {
       ///@todo buffer is limited.
@@ -977,7 +976,7 @@ AD5940Err AppSWVISR(void *pBuff, uint32_t *pCount)
     AppSWVRegModify(pBuff, &FifoCnt);   
   //  AD5940_SleepKeyCtrlS(SLPKEY_UNLOCK);
     //AD5940_EnterSleepS();
-    /* Process data */ 
+    /* Process data */  
     AppSWVDataProcess((int32_t*)pBuff,&FifoCnt);
     *pCount = FifoCnt;
     return 0;
@@ -992,7 +991,6 @@ AD5940Err AppSWVISR(void *pBuff, uint32_t *pCount)
     *pCount = FifoCnt;
 		totalDataReceivedSQW1=1;
     AppSWVCtrl(APPCTRL_STOPNOW, 0);    /* Stop the Wakeup Timer. */
-
   }
   return 0;
 } 

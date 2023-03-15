@@ -92,5 +92,7 @@ void AD5940_McuSetLow(void);
 void AD5940_McuSetHigh(void);
 
 extern uint8_t totalDataReceivedSQW1;
+extern uint8_t start_measurment;
+
 
 #endif
