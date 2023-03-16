@@ -40,7 +40,7 @@ static int32_t RampShowResult(float *pData, uint32_t DataCount)
   {
 				index1++;
 
-    //printf("index:%d, %.3f \n",index1 , pData[i]);
+   // printf("index:%d, %.3f \n",index1 , pData[i]);
 		SQW_DataToPrint[index1]=pData[i];
 		
     //i += 10;  /* Print though UART consumes too much time. */
@@ -58,11 +58,11 @@ void PrintData(void)
   {
 //		printf("Data:%ld, %.3f \n", i, SQW_DataToPrint[i]);
 //		printf("R:%f\n", SQW_DataToPrint[i]/SQW_DataToPrint[i+1]);
-		SQW_DataToPrint_filt[j]=SQW_DataToPrint[i]-SQW_DataToPrint[i+2];
+		SQW_DataToPrint_filt[j]=SQW_DataToPrint[i+2]-SQW_DataToPrint[i];
 		SQW_DataToPrint_filt[j+1]=SQW_DataToPrint[i+3];
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j]);
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j+1]);
-		printf("%.3f,%.3f\n", SQW_DataToPrint_filt[j+1], SQW_DataToPrint_filt[j]*-1);
+		printf("%.3f,%.3f\n", SQW_DataToPrint_filt[j+1], SQW_DataToPrint_filt[j]);
 		AD5940_Delay10us(3000);
 		j=j+2;
 		i=i+3;
@@ -153,19 +153,19 @@ void AD5940RampStructInit(void)
   pRampCfg->FifoThresh = 1023;                   /* Maximum value is 2kB/4-1 = 512-1. Set it to higher value to save power. */
   pRampCfg->SysClkFreq = 16000000.0f;           /* System clock is 16MHz by default */
   pRampCfg->LFOSCClkFreq = LFOSCFreq;           /* LFOSC frequency */
-	pRampCfg->AdcPgaGain = ADCPGA_1P5;
+	pRampCfg->AdcPgaGain = ADCPGA_1;
 	pRampCfg->ADCSinc3Osr = ADCSINC3OSR_4;
   
 	/* Step 2:Configure square wave signal parameters */
-  pRampCfg->RampStartVolt = -1200.0f;     /* Measurement starts at 0V*/
-  pRampCfg->RampPeakVolt = 0.0f;     		 /* Measurement finishes at -0.4V */
-  pRampCfg->VzeroStart = 2200.0f;           /* Vzero is voltage on SE0 pin: 1.3V */
-  pRampCfg->VzeroPeak = 2200.0f;          /* Vzero is voltage on SE0 pin: 1.3V */
-  pRampCfg->Frequency = 100;                 /* Frequency of square wave in Hz */
+  pRampCfg->RampStartVolt = 200.0f;     /* Measurement starts at 0V*/
+  pRampCfg->RampPeakVolt = 1400.0f;     		 /* Measurement finishes at -0.4V */
+  pRampCfg->VzeroStart = 600.0f;           /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->VzeroPeak = 600.0f;          /* Vzero is voltage on SE0 pin: 1.3V */
+  pRampCfg->Frequency = 50;                 /* Frequency of square wave in Hz */
   pRampCfg->SqrWvAmplitude = 60;       /* Amplitude of square wave in mV */
   pRampCfg->SqrWvRampIncrement = 5; /* Increment in mV*/
   pRampCfg->SampleDelay = 2.0f;             /* Time between update DAC and ADC sample. Unit is ms and must be < (1/Frequency)/2 - 0.2*/
-  pRampCfg->LPTIARtiaSel = LPTIARTIA_4K;      /* Maximum current decides RTIA value */
+  pRampCfg->LPTIARtiaSel = LPTIARTIA_1K;      /* Maximum current decides RTIA value */
 	pRampCfg->bRampOneDir = bTRUE;//bTRUE;			/* Only measure ramp in one direction */
 }
 
