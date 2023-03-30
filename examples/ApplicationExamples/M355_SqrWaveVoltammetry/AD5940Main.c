@@ -23,7 +23,125 @@ Analog Devices Software License Agreement.
 #define APPBUFF_SIZE 1024
 uint32_t AppBuff[APPBUFF_SIZE];
 float LFOSCFreq;    /* Measured LFOSC frequency */
+int step=1, wait=0;
+void RunRecipe(int start)
+{
+	if(wait==0)
+	{
+		if(step==1)
+		{
+				AD5940_Delay10us(3000);
+				printf("#P2_ON_99_10;");
+			  wait=1;
+		}
+		if(step==2)
+		{
+				AD5940_Delay10us(3000);
+				printf("#WAIT_30;");
+			  wait=1;					
+		}
+		if(step==3)
+		{
+				AD5940_Delay10us(3000);
+				printf("#C8_ON;");
+				wait=1;			
+		}
+		if(step==4)
+		{
+			  AD5940_Delay10us(3000);
+				printf("#P3_ON_99_12;");
+				wait=1;			
+		}
+		if(step==5)
+		{
+				printf("#P1_ON_99_12;");
+				wait=1;			
+		}
+		if(step==6)
+		{
+				AD5940_Delay10us(3000);
+				printf("#P3_ON_99_12;");	
+				wait=1;				
+		}	
+		if(step==7)
+		{
+				AD5940_Delay10us(3000);
+				printf("#P1_ON_-99_12;");	
+				wait=1;				
+			step=8;
+		}				
+//		switch(step)
+//		{
+//			case 1:
+//				//do someting 
 
+//				printf("#P2_ON_99_10;");
+//					AD5940_Delay10us(3000);
+//			  wait=1;
+//				break;
+//			case 2:
+//				//do something
+
+//				printf("#WAIT_30;");
+//					AD5940_Delay10us(3000);
+//			  wait=1;			
+//				break;			
+//			case 3:
+//				//do something
+
+//				printf("#C8_ON;");
+//	
+//				wait=1;
+//				break;			
+//			case 4:
+//				//do something
+
+//				printf("#P3_ON_99_12;");
+//					AD5940_Delay10us(3000);
+//				wait=1;
+//				break;			
+//			case 5:
+//		
+//				printf("#WAIT_30;");
+//					AD5940_Delay10us(3000);
+//				wait=1;
+//				break;			
+//			case 6:
+//				//do something
+
+//				printf("#P1_ON_-99_12;");	
+//					AD5940_Delay10us(3000);
+//				wait=1;			
+//				break;			
+//			case 7:
+//				//do something
+
+//				printf("#P2_ON_99_12;");	
+//					AD5940_Delay10us(3000);
+//				wait=1;			
+//				break;	
+//			case 8:
+//				//do something	
+//			
+//				wait=1;			
+//				break;		
+//			case 9:
+//				//do something	
+//			
+//				wait=1;			
+//				break;	
+//			case 10:
+//				//do something	
+//			
+//				wait=1;			
+//				break;			
+//			default:
+//				start=0;
+//				wait=1;
+//			break;
+//		}
+	}	
+}
 /**
  * @brief An example to deal with data read back from AD5940. Here we just print data to UART
  * @note UART has limited speed, it has impact when sample rate is fast. Try to print some of the data not all of them.
@@ -62,12 +180,17 @@ void PrintData(void)
 		SQW_DataToPrint_filt[j+1]=SQW_DataToPrint[i+3];
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j]);
 		//printf("Data:%ld, %.3f \n", i, SQW_DataToPrint_filt[j+1]);
-		printf("%.3f,%.3f\n", SQW_DataToPrint_filt[j+1], SQW_DataToPrint_filt[j]);
-		AD5940_Delay10us(3000);
+	
 		j=j+2;
 		i=i+3;
 		  
   }
+	for(int i=j;i>0;i--)
+  {
+		printf("%.3f,%.3f\n", SQW_DataToPrint_filt[i-1], SQW_DataToPrint_filt[i]);
+		i--;
+		AD5940_Delay10us(3000);
+	}
 	general_index=0;
 }
 
@@ -131,7 +254,7 @@ static int32_t AD5940PlatformCfg(void)
   LfoscMeasure.CalSeqAddr = 0;        /* Put sequence commands from start address of SRAM */
   LfoscMeasure.SystemClkFreq = 16000000.0f; /* 16MHz in this firmware. */
   AD5940_LFOSCMeasure(&LfoscMeasure, &LFOSCFreq);
-  printf("LFOSC Freq:%f\n", LFOSCFreq);
+ // printf("LFOSC Freq:%f\n", LFOSCFreq);
  // AD5940_SleepKeyCtrlS(SLPKEY_UNLOCK);         /*  */
   return 0;
 }
@@ -171,23 +294,24 @@ void AD5940RampStructInit(void)
 
 void AD5940_Main(void)
 {
-			  uint32_t temp;  
+  uint32_t temp;  
+//  AD5940PlatformCfg();
+//  AD5940RampStructInit();
+
+//  AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */
+//  AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurment to start. Second parameter has no meaning with this command. */
 
   while(1)
   {
-		
+		//RunRecipe(1);
 		if(start_measurment==1)
 		{		
-
-				AD5940PlatformCfg();
-				AD5940RampStructInit();
-				
-				//AD5940_McuSetLow();
-				AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */
-				
-				
-				AD5940_Delay10us(100000);		/* Add a delay to allow sensor reach equilibrium befor starting the measurement */
-				AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurement to start. Second parameter has no meaning with this command. */
+			AD5940PlatformCfg();
+			AD5940RampStructInit();	
+			//AD5940_McuSetLow();
+			AppSWVInit(AppBuff, APPBUFF_SIZE);    /* Initialize RAMP application. Provide a buffer, which is used to store sequencer commands */				
+			AD5940_Delay10us(100000);		/* Add a delay to allow sensor reach equilibrium befor starting the measurement */
+			AppSWVCtrl(APPCTRL_START, 0);          /* Control IMP measurement to start. Second parameter has no meaning with this command. */
 			start_measurment=2;
 		}
 		if(start_measurment==2)

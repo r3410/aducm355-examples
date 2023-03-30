@@ -24,7 +24,7 @@ Analog Devices Software License Agreement.
 #define CMDTABLE_SIZE 8
 
 uint32_t help(uint32_t para1, uint32_t para2, float para3, float para4);
-uint32_t say_hello(uint32_t para1, uint32_t para2, float para3, float para4);
+uint32_t done(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t meter_mode(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t stop(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t start(uint32_t para1, uint32_t para2, float para3, float para4);
@@ -41,7 +41,7 @@ struct __uartcmd_table
 }uart_cmd_table[CMDTABLE_SIZE]=
 {
   {(void*)help, "Help", "print supported commands"},
-  {(void*)say_hello, "Hello", "print parameteres and say hello"},
+  {(void*)done, "done", "done"},
   {(void*)meter_mode, "Meas", "set meter mode with para1:\nbit[0] 1:TEM_enable,\nbit[1] 1:EC_enable,\nbit[2] 1:PH_enable,\nbit[3] 1:DO_enable,\nbit[4] 1:PHIMP_enable,\n"},
   {(void*)stop, "Stop", "Stop meter"},
 	{(void*)start, "Start", "Start meter"},
@@ -61,10 +61,10 @@ uint32_t help(uint32_t para1, uint32_t para2, float para3, float para4)
   return 0x87654321;
 }
 
-uint32_t say_hello(uint32_t para1, uint32_t para2, float para3, float para4)
+uint32_t done(uint32_t para1, uint32_t para2, float para3, float para4)
 {
-  printf("para1:%d, para2:%d, para3:%f, para4:%f\n", para1, para2, para3, para4);
-  printf("Hello\n");
+	step++;
+	wait=0;
   return 0x12345678;
 }
 uint32_t start(uint32_t para1, uint32_t para2, float para3, float para4)

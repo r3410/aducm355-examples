@@ -796,7 +796,7 @@ static AD5940Err AppSWVRtiaCal(void)
   lprtia_cal.bWithCtia = bFALSE;
   AD5940_LPRtiaCal(&lprtia_cal, &RtiaCalValue);
   AppSWVCfg.RtiaValue = RtiaCalValue;
-  printf("Rtia,%f,%f\n", RtiaCalValue.Magnitude, RtiaCalValue.Phase);
+  //printf("Rtia,%f,%f\n", RtiaCalValue.Magnitude, RtiaCalValue.Phase);
   return AD5940ERR_OK;
 }
 
@@ -966,7 +966,8 @@ void TurnOffCE_RE_WE()
 		lp_cfg.LpAmpCfg.LpAmpPwrMod = LPAMPPWR_NORM;           /* Set low power amplifiers to normal power mode */
 		lp_cfg.LpAmpCfg.LpPaPwrEn = bTRUE;                  /* Enable LP PA(potentialstat amplifier) power */
 		lp_cfg.LpAmpCfg.LpTiaPwrEn = bTRUE;                /* Leave LPTIA power off */
-		lp_cfg.LpAmpCfg.LpTiaSW = LPTIASW(0); /* Close these switches to make sure LP PA amplifier is closed loop */
+	//lp_cfg.LpAmpCfg.LpTiaSW = LPTIASW(11); /* Close these switches to make sure LP PA amplifier is closed loop */
+		lp_cfg.LpAmpCfg.LpTiaSW = LPTIASW(10)|LPTIASW(11)|LPTIASW(4); /* Close these switches to make sure LP PA amplifier is closed loop */
 		lp_cfg.LpAmpCfg.LpTiaRf = LPTIARF_SHORT;
 		lp_cfg.LpAmpCfg.LpTiaRtia = LPTIARTIA_512K;
 		lp_cfg.LpAmpCfg.LpTiaRload = LPTIARLOAD_100R;
