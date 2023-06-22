@@ -21,7 +21,20 @@ int main(void)
   void AD5940_Main(void);
   ClockInit();
   UartInit();
+  DioOenPin(pADI_GPIO2,PIN4,1);               // Enable P2.4 as Output to toggle DS2 LED
+  DioClrPin(pADI_GPIO2,PIN4);           // Flash LED
   AD5940_MCUResourceInit(0);    /* Inialize all peripherals etc. used for AD5940/AFE. */
+	
+	DioCfgPin(pADI_GPIO0,PIN3,0);    //GPIO CSO - enable - P0.3 - H61 configuration 
+	DioOenPin(pADI_GPIO0,PIN3,1); 
+	DioSetPin(pADI_GPIO0,PIN3); 
+	
+	DioCfgPin(pADI_GPIO0,PIN0,0);    //GPIO A0 - SCLK0 - P0.0 - H9 configuration 
+	DioOenPin(pADI_GPIO0,PIN0,1); 
+	
+	DioCfgPin(pADI_GPIO0,PIN1,0);    //GPIO A1 - Mosi - P0.1 - H8 configuration 
+	DioOenPin(pADI_GPIO0,PIN1,1); 
+
   AD5940_Main();
 }
 

@@ -15,7 +15,9 @@ Analog Devices Software License Agreement.
 
 *****************************************************************************/
 #include "SqrWaveVoltammetry.h"
-
+#include "DioLib.h"
+#include <stdio.h>
+#include "ad5940.h"
 /**
    User could configure following parameters
 **/
@@ -306,6 +308,7 @@ void AD5940_Main(void)
 		//RunRecipe(1);
 		if(start_measurment==1)
 		{		
+			DioClrPin(pADI_GPIO2,PIN4);           // Flash LED
 			AD5940PlatformCfg();
 			AD5940RampStructInit();	
 			//AD5940_McuSetLow();
@@ -330,6 +333,10 @@ void AD5940_Main(void)
 						start_measurment=0;
 					}
 				}
+			}else
+			{
+				DioTglPin(pADI_GPIO2,PIN4);           // Flash LED
+				AD5940_Delay10us(50000);
 			}
 		}
 

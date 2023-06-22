@@ -20,14 +20,20 @@ Analog Devices Software License Agreement.
 #include <stdlib.h>
 #include <UrtLib.h>
 #include "SqrWaveVoltammetry.h"
+#include "ad5940.h"
+#include "DioLib.h"
 #define LINEBUFF_SIZE 128
-#define CMDTABLE_SIZE 8
+#define CMDTABLE_SIZE 10
 
 uint32_t help(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t done(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t meter_mode(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t stop(uint32_t para1, uint32_t para2, float para3, float para4);
 uint32_t start(uint32_t para1, uint32_t para2, float para3, float para4);
+uint32_t channel_1(uint32_t para1, uint32_t para2, float para3, float para4);
+uint32_t channel_2(uint32_t para1, uint32_t para2, float para3, float para4);
+uint32_t channel_3(uint32_t para1, uint32_t para2, float para3, float para4);
+uint32_t channel_4(uint32_t para1, uint32_t para2, float para3, float para4);
 uint8_t start_measurment=0;
 uint8_t ucTxBufferEmpty =0;
 unsigned char szTemp[64] = "";		       // Used to build string before printing to UART
@@ -45,8 +51,35 @@ struct __uartcmd_table
   {(void*)meter_mode, "Meas", "set meter mode with para1:\nbit[0] 1:TEM_enable,\nbit[1] 1:EC_enable,\nbit[2] 1:PH_enable,\nbit[3] 1:DO_enable,\nbit[4] 1:PHIMP_enable,\n"},
   {(void*)stop, "Stop", "Stop meter"},
 	{(void*)start, "Start", "Start meter"},
+	{(void*)channel_1, "channel_1", "Set channel_1"},
+	{(void*)channel_2, "channel_2", "Set channel_2"},
+	{(void*)channel_3, "channel_3", "Set channel_3"},
+	{(void*)channel_4, "channel_4", "Set channel_4"},
 };
 
+void SetOutput(uint8_t channel)
+{
+	if(channel==1)
+	{
+		DioClrPin(pADI_GPIO0,PIN0); //A0
+		DioClrPin(pADI_GPIO0,PIN1); //A1
+	}
+	if(channel==2)
+	{
+		DioClrPin(pADI_GPIO0,PIN0); //A0
+		DioSetPin(pADI_GPIO0,PIN1); //A1		
+	}
+	if(channel==3)
+	{
+		DioSetPin(pADI_GPIO0,PIN0); //A0
+		DioClrPin(pADI_GPIO0,PIN1); //A1
+	}
+	if(channel==4)
+	{
+		DioSetPin(pADI_GPIO0,PIN0); //A0
+		DioSetPin(pADI_GPIO0,PIN1); //A1
+	}
+}
 
 uint32_t help(uint32_t para1, uint32_t para2, float para3, float para4)
 {
@@ -87,6 +120,35 @@ uint32_t meter_mode(uint32_t para1, uint32_t para2, float para3, float para4)
   printf("Hello\n");
   return 0x12345678;
 }
+uint32_t channel_1(uint32_t para1, uint32_t para2, float para3, float para4)
+{
+  //printf("para1:%d, para2:%d, para3:%f, para4:%f\n", para1, para2, para3, para4);
+  printf("channel_1!\n");
+	SetOutput(1); 
+  return 0x12345678;
+}
+uint32_t channel_2(uint32_t para1, uint32_t para2, float para3, float para4)
+{
+  //printf("para1:%d, para2:%d, para3:%f, para4:%f\n", para1, para2, para3, para4);
+  printf("channel_2!\n");
+	SetOutput(2);  
+  return 0x12345678;
+}
+uint32_t channel_3(uint32_t para1, uint32_t para2, float para3, float para4)
+{
+  //printf("para1:%d, para2:%d, para3:%f, para4:%f\n", para1, para2, para3, para4);
+  printf("channel_3!\n");
+	SetOutput(3); 
+  return 0x12345678;
+}
+uint32_t channel_4(uint32_t para1, uint32_t para2, float para3, float para4)
+{
+  //printf("para1:%d, para2:%d, para3:%f, para4:%f\n", para1, para2, para3, para4);
+  printf("channel_4!\n");		
+	SetOutput(4); 
+  return 0x12345678;
+}
+
 char line_buffer[LINEBUFF_SIZE];
 uint32_t line_buffer_index = 0;
 uint32_t token_count = 0;
